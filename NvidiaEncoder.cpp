@@ -75,17 +75,17 @@ NvidiaEncoder::NvidiaEncoder(const int& frameToEncode, const int frameRate, cons
 	std::cout << "frameRate " << frameRate << "\n";
 	std::cout << "frameToEncode " << frameToEncode << "\n";
 
-	stream = _popen("ffmpeg -f h264 -i pipe: -c copy output.mp4", "wb");
+	stream = _popen("ffmpeg -y -f h264 -i pipe: -c copy output.mp4", "wb");
 }
 
 NvidiaEncoder::~NvidiaEncoder()
 {
 	glDeleteBuffers(pboNum, pbos);
-	nvencAPI.nvEncDestroyBitstreamBuffer(encoder, bitstream.bitstreamBuffer);
-	nvencAPI.nvEncDestroyEncoder(encoder);
+	std::cout << "destroy bitstream status " << nvencAPI.nvEncDestroyBitstreamBuffer(encoder, bitstream.bitstreamBuffer) << "\n";
+	std::cout << "destroy encoder status " << nvencAPI.nvEncDestroyEncoder(encoder) << "\n";
 	for (int i = 0; i < pboNum; i++)
 	{
-		cuGraphicsUnregisterResource(resources[i]);
+		std::cout << "unregister resource status " << cuGraphicsUnregisterResource(resources[i]) << "\n";
 	}
 	cuCtxDestroy(cuCtx);
 }
@@ -99,13 +99,13 @@ bool NvidiaEncoder::encode()
 	}
 	else
 	{
-		cuGraphicsMapResources(1, &resources[idx], (CUstream)0);
+		std::cout << cuGraphicsMapResources(1, &resources[idx], (CUstream)0) << "\n";
 
 		CUdeviceptr devicePtr;
 
 		size_t pSize;
 
-		cuGraphicsResourceGetMappedPointer(&devicePtr, &pSize, resources[idx]);
+		std::cout << cuGraphicsResourceGetMappedPointer(&devicePtr, &pSize, resources[idx]) << "\n";
 
 		NV_ENC_REGISTER_RESOURCE registerResource = { NV_ENC_REGISTER_RESOURCE_VER };
 
@@ -127,13 +127,13 @@ bool NvidiaEncoder::encode()
 
 		registerResource.pOutputFencePoint = nullptr;
 
-		nvencAPI.nvEncRegisterResource(encoder, &registerResource);
+		std::cout << nvencAPI.nvEncRegisterResource(encoder, &registerResource) << "\n";
 
 		NV_ENC_MAP_INPUT_RESOURCE mapResource = { NV_ENC_MAP_INPUT_RESOURCE_VER };
 
 		mapResource.registeredResource = registerResource.registeredResource;
 
-		nvencAPI.nvEncMapInputResource(encoder, &mapResource);
+		std::cout << nvencAPI.nvEncMapInputResource(encoder, &mapResource) << "\n";
 
 		NV_ENC_PIC_PARAMS picParams = { NV_ENC_PIC_PARAMS_VER };
 
@@ -176,11 +176,11 @@ bool NvidiaEncoder::encode()
 			nvencAPI.nvEncUnlockBitstream(encoder, lockBitsream.outputBitstream);
 		}
 
-		nvencAPI.nvEncUnregisterResource(encoder, registerResource.registeredResource);
+		std::cout << nvencAPI.nvEncUnmapInputResource(encoder, mapResource.mappedResource) << "\n";
 
-		nvencAPI.nvEncUnmapInputResource(encoder, mapResource.mappedResource);
+		std::cout << nvencAPI.nvEncUnregisterResource(encoder, registerResource.registeredResource) << "\n";
 
-		cuGraphicsUnmapResources(1, &resources[idx], (CUstream)0);
+		std::cout << cuGraphicsUnmapResources(1, &resources[idx], (CUstream)0) << "\n";
 
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[idx]);
 		glReadPixels(0, 0, encodeWidth, encodeHeight, GL_RGBA, GL_UNSIGNED_BYTE, 0);

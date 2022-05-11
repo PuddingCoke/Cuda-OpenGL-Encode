@@ -6,8 +6,9 @@
 #include<iostream>
 #include<fstream>
 
-#include<glad/glad.h>
 #include<NvEnc/nvEncodeAPI.h>
+
+#include<glad/glad.h>
 #include<cuda.h>
 #include<cuda_runtime.h>
 #include<cudaGL.h>
