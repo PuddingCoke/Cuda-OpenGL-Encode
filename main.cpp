@@ -45,12 +45,12 @@ int main()
 
 	float theta = 0;
 
-	while (encoder->encode())
+	do
 	{
 		glClearColor(cosf(theta), sinf(theta), 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		theta += 0.01f;
-	}
+	} while (encoder->encode());
 
 	delete encoder;
 
